@@ -36,7 +36,7 @@ Use serial output or on-board indicators (LEDs) to monitor node connectivity and
 
 Test communication between nodes, verify packet routing, and adjust parameters (such as transmit power or mesh forwarding logic) for optimal performance.
 
-Project Structure
+## Project Structure
 
 ├── .vscode/               # IDE / debug configuration  
 ├── lib/                   # External libraries or modules  
