@@ -1,0 +1,39 @@
+#include <SPI.h>
+#include <LoRa.h>
+
+#define SS_PIN     10
+#define RST_PIN    9
+#define DIO0_PIN   2
+#define LORA_FREQ  868E6
+
+unsigned int msgCount = 0;
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial);
+
+  LoRa.setPins(SS_PIN, RST_PIN, DIO0_PIN);
+  if (!LoRa.begin(LORA_FREQ)) {
+    Serial.println("LoRa init failed. Check wiring.");
+    while (true);
+  }
+
+  LoRa.setSpreadingFactor(7);
+  LoRa.setTxPower(14);
+  Serial.println("LoRa Sender Ready at SF=7");
+}
+
+void loop() {
+  msgCount++;
+  String message = "TX1:#" + String(msgCount) + " Hello from TX1!";
+
+  LoRa.beginPacket();
+  LoRa.print(message);
+  LoRa.endPacket();
+
+  Serial.print("Sent: ");
+  Serial.println(message);
+
+  delay(1500);  // Increased from 1000ms → gives relay time to transmit at SF8
+}
+
