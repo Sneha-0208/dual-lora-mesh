@@ -39,6 +39,7 @@ Test communication between nodes, verify packet routing, and adjust parameters (
 Project Structure
 bash
 .
+
 ├── .vscode/               # IDE / debug configuration  
 ├── lib/                   # External libraries or modules  
 ├── src/                   # Main firmware source code  
