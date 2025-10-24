@@ -1,233 +1,202 @@
 #include <Arduino.h>
+#include "LoraMesher.h"
 #include <SPI.h>
 
-#include <LoRaMesher.h>
-#include <LoRa.h>
+// Common LED definition
+#define BOARD_LED 4
+#define LED_ON LOW
+#define LED_OFF HIGH
 
-// ----- Node Type Selection via Build Flags -----
-// In platformio.ini, you will define exactly one:
-// -D NORMAL_NODE
-// -D END_NODE
-// -D BRIDGE_NODE
+// Common data packet structure
+struct DataPacket {
+  int type;
+  uint8_t payload[16];
+};
 
-// ----- Common LoRa Pins -----
-#ifndef RADIO_CS
-#define RADIO_CS    10
-#endif
-#ifndef RADIO_RST
-#define RADIO_RST   9
-#endif
-#ifndef RADIO_IRQ
-#define RADIO_IRQ   2
-#endif
+// ========== MESH A NODE (SF7) ==========
+#ifdef MeshANode
 
-#ifndef LORA_FREQ
-#define LORA_FREQ 868E6
-#endif
+#define LORA_CS   5
+#define LORA_RST  14
+#define LORA_IRQ  2
+#define LORA_IO1  33
 
-#ifdef NORMAL_NODE
-// ----------- NORMAL NODE (Mesh Participant) -----------
-LoraMesher &radio = LoraMesher::getInstance();
+LoraMesher& radio = LoraMesher::getInstance();
 
-void setup() {
-    Serial.begin(115200);
-    while (!Serial);
+DataPacket outPkt;
 
-    LoraMesher::LoraMesherConfig config;
+void setupLoRaMeshA() {
+  LoraMesher::LoraMesherConfig cfg;
+  cfg.module = LoraMesher::LoraModules::SX1276_MOD;
+  cfg.loraCs = LORA_CS;
+  cfg.loraRst = LORA_RST;
+  cfg.loraIrq = LORA_IRQ;
+  cfg.loraIo1 = LORA_IO1;
+  cfg.spreadingFactor = 7; // SF7
+  SPI.begin(18, 19, 23, LORA_CS);
+  cfg.spi = &SPI;
 
-    config.module = LoraMesher::LoraModules::SX1276_MOD;
-
-    config.loraCs  = RADIO_CS;
-    config.loraRst = RADIO_RST;
-    config.loraIrq = RADIO_IRQ;
-    config.sf = LORA_SF; 
-    radio.begin(config);
-    radio.start();
-
-    Serial.println("NORMAL_NODE: LoraMesher started");
-}
-
-void loop() {
-    static uint32_t counter = 0;
-    counter++;
-
-    struct { int type = 0; union { uint32_t counter; uint8_t data[4]; } data; } pkt;
-    pkt.type = 0; pkt.data.counter = counter;
-
-    radio.createPacketAndSend(BROADCAST_ADDR, &pkt, 1);
-    Serial.print("NORMAL_NODE: Sent counter ");
-    Serial.println(counter);
-    delay(5000);
-}
-#endif // NORMAL_NODE
-
-#ifdef END_NODE
-// ----------- END NODE (Mesh Side) -----------
-#include <LoRaMesher.h>
-LoraMesher LM;
-void sendRawToBridge(uint8_t *data, size_t len) {
-    LoRa.beginPacket();
-    LoRa.write(data, len);
-    LoRa.endPacket();
-}
-
-void handleIncomingAppPacket(LM_Packet *pkt) {
-#ifdef BRIDGE_NODE_ID
-    if (pkt->destination == BRIDGE_NODE_ID) {
-        uint8_t buffer[255];
-        int size = pkt->toBytes(buffer);
-        sendRawToBridge(buffer, size);
-    }
-#endif
-}
-
-void setup() {
-    Serial.begin(115200);
-    while (!Serial);
-
-    // LoRaMesher
-    LM.begin(LORA_FREQ, RADIO_CS, RADIO_RST, RADIO_IRQ);
-    LM.onReceive(handleIncomingAppPacket);
-
-    // LoRa for raw transmission
-    LoRa.setPins(RADIO_CS, RADIO_RST, RADIO_IRQ);
-    LoRa.begin(LORA_FREQ);
-    LoRa.setSpreadingFactor(LORA_SF);
-
-    Serial.println("END_NODE: Ready ");
-}
-
-void loop() {
-    LM.loop(); // LoRaMesher routing
-}
-#endif // END_NODE
-
-#ifdef BRIDGE_NODE
-
-#include <SPI.h>
-#include <LoRa.h>
-
-// Create SPI classes for HSPI and VSPI
-SPIClass hspi(HSPI);
-SPIClass vspi(VSPI);
-
-// LoRa instances for RFM1 and RFM2
-LoRaClass LoRa1;
-LoRaClass LoRa2;
-
-bool lora1_ok = false;
-bool lora2_ok = false;
-
-void resetLoRa() {
-  digitalWrite(RFM1_RST, LOW);  
-  delay(10);
-  digitalWrite(RFM1_RST, HIGH);
-  delay(100);  // Wait for module to reset
- 
-  digitalWrite(RFM2_RST, LOW);  
-  delay(10);
-  digitalWrite(RFM2_RST, HIGH);
-  delay(100);  // Wait for module to reset
+  radio.begin(cfg);
+  radio.start();
+  Serial.println("Mesh A Node (SF7) initialized");
 }
 
 void setup() {
   Serial.begin(115200);
-  delay(2000);  // Small delay to stabilize serial communication
-  while (Serial.available()) {
-    Serial.read();  // Clear serial buffer
-  }
-  Serial.println("LoRa Relay System Initialized...");
-
-  resetLoRa();  // Reset the LoRa modules before initialization
-
-  // ----- RFM1 Setup (HSPI) -----
-  hspi.begin(RFM1_SCK, RFM1_MISO, RFM1_MOSI, RFM1_SS);
-  LoRa1.setSPI(hspi);
-  LoRa1.setPins(RFM1_SS, RFM1_RST, RFM1_DIO0);
- 
-  if (LoRa1.begin(LORA_FREQ)) {
-    Serial.println("[DEBUG] LoRa1 (RFM1) initialized successfully.");
-    lora1_ok = true;
-  } else {
-    Serial.println("[ERROR] LoRa1 init failed!");
-  }
-
-  // ----- RFM2 Setup (VSPI) -----
-  vspi.begin(RFM2_SCK, RFM2_MISO, RFM2_MOSI, RFM2_SS);
-  LoRa2.setSPI(vspi);
-  LoRa2.setPins(RFM2_SS, RFM2_RST, RFM2_DIO0);
-
-  if (LoRa2.begin(LORA_FREQ)) {
-    Serial.println("[DEBUG] LoRa2 (RFM2) initialized successfully.");
-    lora2_ok = true;
-  } else {
-    Serial.println("[ERROR] LoRa2 init failed!");
-  }
-
-  if (!lora1_ok && !lora2_ok) {
-    Serial.println("[ERROR] No LoRa modules detected. Halting...");
-    while (true);
-  }
-
-  Serial.println("[DEBUG] LoRa modules initialized, ready to receive and relay.");
+  pinMode(BOARD_LED, OUTPUT);
+  digitalWrite(BOARD_LED, LED_OFF);
+  setupLoRaMeshA();
 }
 
 void loop() {
-  // Check if RFM1 is ready
-  if (lora1_ok) {
-    int packetSize = LoRa1.parsePacket();
-    if (packetSize > 0) {
-      Serial.println("[DEBUG] Received a packet at RFM1.");
+  outPkt.type = 0;
+  for (int i = 0; i < 16; i++) outPkt.payload[i] = i;
+  Serial.println("MeshA sending packet");
+  radio.createPacketAndSend(BROADCAST_ADDR, &outPkt, 1);
+  vTaskDelay(5000 / portTICK_PERIOD_MS);
+}
 
-      String receivedMsg = "";
+#endif
 
-      // Read the received packet, checking for valid characters
-      while (LoRa1.available()) {
-        char c = (char)LoRa1.read();  // Read incoming byte
-        if (isPrintable(c)) {  // Only keep printable characters
-          receivedMsg += c;
-        }
+
+// ========== MESH B NODE (SF8) ==========
+#ifdef MeshBNode
+
+#define LORA_CS   15
+#define LORA_RST  4
+#define LORA_IRQ  27
+#define LORA_IO1  32
+
+LoraMesher& radio = LoraMesher::getInstance();
+
+void processPackets(void*) {
+  for (;;) {
+    ulTaskNotifyTake(pdPASS, portMAX_DELAY);
+    while (radio.getReceivedQueueSize() > 0) {
+      AppPacket<DataPacket>* pkt = radio.getNextAppPacket<DataPacket>();
+      if (pkt) {
+        Serial.println("MeshB received a packet:");
+        for (int i = 0; i < pkt->payload->payload[0]; i++)
+          Serial.printf("%d ", pkt->payload->payload[i]);
+        Serial.println();
+        radio.deletePacket(pkt);
       }
-
-      // If the message is valid, print it
-      if (receivedMsg.length() > 0) {
-        Serial.print("[RFM1 RX] Received Message: ");
-        Serial.println(receivedMsg);  // Print received message
-      } else {
-        Serial.println("[DEBUG] Received invalid packet (non-printable data).");
-      }
-
-      // Remove the "TX1:" tag from the received message
-      receivedMsg.replace("TX1:", "");
-
-      // Now relay the message via RFM2
-      if (lora2_ok) {
-        // Explicitly set SF=8 each time before transmission
-        LoRa2.setSpreadingFactor(8);  // SF=8 (longer range, lower data rate)
-        Serial.println("[DEBUG] RFM2: Setting SF=8 before transmission.");
-
-        // Add " from RFM2" to the message before relaying
-        String relayMsg = receivedMsg + " from RFM2";  // Append " from RFM2" to the message
-       
-        // Debug message before sending
-        Serial.println("[DEBUG] RFM2 Transmitting at SF=8...");
-       
-        LoRa2.beginPacket();
-        LoRa2.print(relayMsg);
-        LoRa2.endPacket();  // Send the relayed message at SF=8
-
-        Serial.print("[RFM2 TX] Relayed Message: ");
-        Serial.println(relayMsg);
-      } else {
-        Serial.println("[ERROR] RFM2 is not ready, cannot relay message.");
-      }
-    } else {
-      // If no packet is received, print a debug message
-      Serial.println("[DEBUG] No packet received at RFM1.");
     }
   }
-
-  // Add small delay between checking for packets
-  // delay(50);  // Adjusted delay to sync better with SF=8 timing
 }
-#endif // BRIDGE_NODE
+
+void setupLoRaMeshB() {
+  LoraMesher::LoraMesherConfig cfg;
+  cfg.module = LoraMesher::LoraModules::SX1276_MOD;
+  cfg.loraCs = LORA_CS;
+  cfg.loraRst = LORA_RST;
+  cfg.loraIrq = LORA_IRQ;
+  cfg.loraIo1 = LORA_IO1;
+  cfg.spreadingFactor = 8; // SF8
+  SPI.begin(18, 19, 23, LORA_CS);
+  cfg.spi = &SPI;
+
+  radio.begin(cfg);
+  radio.start();
+
+  TaskHandle_t rxTask;
+  xTaskCreate(processPackets, "RX", 4096, NULL, 2, &rxTask);
+  radio.setReceiveAppDataTaskHandle(rxTask);
+  Serial.println("Mesh B Node (SF8) initialized");
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(BOARD_LED, OUTPUT);
+  digitalWrite(BOARD_LED, LED_ON);
+  setupLoRaMeshB();
+}
+
+void loop() {
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
+}
+
+#endif
+
+
+// ========== BRIDGE NODE (SF7 ↔ SF8) ==========
+#ifdef BridgeNode
+
+#define LORA1_CS   5
+#define LORA1_RST  14
+#define LORA1_IRQ  2
+#define LORA1_IO1  33
+
+#define LORA2_CS   15
+#define LORA2_RST  4
+#define LORA2_IRQ  27
+#define LORA2_IO1  32
+
+LoraMesher& radioA = LoraMesher::getInstance(0);
+LoraMesher& radioB = LoraMesher::getInstance(1);
+
+TaskHandle_t taskA, taskB;
+
+void processPacketsA(void*) {
+  for (;;) {
+    ulTaskNotifyTake(pdPASS, portMAX_DELAY);
+    while (radioA.getReceivedQueueSize() > 0) {
+      AppPacket<DataPacket>* pkt = radioA.getNextAppPacket<DataPacket>();
+      if (pkt) {
+        Serial.println("Bridge: forwarding from MeshA → MeshB");
+        radioB.createPacketAndSend(BROADCAST_ADDR, pkt->payload, 1);
+        radioA.deletePacket(pkt);
+      }
+    }
+  }
+}
+
+void processPacketsB(void*) {
+  for (;;) {
+    ulTaskNotifyTake(pdPASS, portMAX_DELAY);
+    while (radioB.getReceivedQueueSize() > 0) {
+      AppPacket<DataPacket>* pkt = radioB.getNextAppPacket<DataPacket>();
+      if (pkt) {
+        Serial.println("Bridge: forwarding from MeshB → MeshA");
+        radioA.createPacketAndSend(BROADCAST_ADDR, pkt->payload, 1);
+        radioB.deletePacket(pkt);
+      }
+    }
+  }
+}
+
+void setupLoRaModule(LoraMesher& r, int cs, int rst, int irq, int io1, int sf, SPIClass* spi) {
+  LoraMesher::LoraMesherConfig cfg;
+  cfg.module = LoraMesher::LoraModules::SX1276_MOD;
+  cfg.loraCs = cs;
+  cfg.loraRst = rst;
+  cfg.loraIrq = irq;
+  cfg.loraIo1 = io1;
+  cfg.spreadingFactor = sf;
+  cfg.spi = spi;
+  r.begin(cfg);
+  r.start();
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(BOARD_LED, OUTPUT);
+
+  SPI.begin(18, 19, 23, LORA1_CS);
+  SPIClass* vspi = new SPIClass(VSPI);
+  vspi->begin(5, 19, 23, LORA2_CS);
+
+  setupLoRaModule(radioA, LORA1_CS, LORA1_RST, LORA1_IRQ, LORA1_IO1, 7, &SPI);
+  setupLoRaModule(radioB, LORA2_CS, LORA2_RST, LORA2_IRQ, LORA2_IO1, 8, vspi);
+
+  xTaskCreate(processPacketsA, "ProcA", 4096, NULL, 2, &taskA);
+  xTaskCreate(processPacketsB, "ProcB", 4096, NULL, 2, &taskB);
+  radioA.setReceiveAppDataTaskHandle(taskA);
+  radioB.setReceiveAppDataTaskHandle(taskB);
+
+  Serial.println("Bridge Node active: relaying between MeshA(SF7) and MeshB(SF8)");
+}
+
+void loop() { vTaskDelay(1000 / portTICK_PERIOD_MS); }
+
+#endif
