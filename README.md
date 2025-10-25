@@ -5,7 +5,6 @@ The objective of this project is to design a bridge node equipped with two LoRa 
 
 ## Key Features  
 - Mesh topology: nodes forward messages across the network, extending range beyond single hop.  
-- Dual LoRa modules per node (hence “dual-LoRa”): one module for node-to-node communication, the other perhaps dedicated to gateway or long-haul links.  
 - Low power: nodes are designed to run on minimal power and operate for extended durations.  
 - Modular firmware structure (see `src/` and `lib/` folders) to allow easy customization or integration with sensors.
 
