@@ -53,41 +53,39 @@ This configuration acts as a **spreading factor conversion bridge**, enabling co
   ```cpp
   SPIClass hspi(HSPI);
   SPIClass vspi(VSPI);
-
-  Example Transmission Path:
+``
+  # Example Transmission Path:
 
 TX1 → Relay (RFM1:SF7) → RFM2(SF8) → Receiver
 
-Relay Node
+# Code-Level Differences
 
-Dual LoRa modules (RFM1, RFM2)
+# Transmitter
 
-Receives packets on SF7 (RFM1)
+- Single LoRa module
+- Spreading Factor: SF7
+- Periodically transmits "TX1:#<counter> Hello from TX1!"
+- Delay: 1500 ms between packets
 
-Transmits modified packets on SF8 (RFM2)
+# Relay Node
 
-Uses a printable character filter to ignore corrupted data
+- Dual LoRa modules (RFM1, RFM2)
+- Receives packets on SF7 (RFM1)
+- Transmits modified packets on SF8 (RFM2)
+- Uses a printable character filter to ignore corrupted data
+- Adds " from RFM2" before relaying
 
-Adds " from RFM2" before relaying
+# Receiver
 
-Receiver
+-Single LoRa module
+-Listens on SF8
+-Uses optional CRC check (LoRa.enableCrc())
+-Prints received packets to Serial
 
-Single LoRa module
+# Benefits of using Relay Node method
 
-Listens on SF8
-
-Uses optional CRC check (LoRa.enableCrc())
-
-Prints received packets to Serial
-
-Benefits of using Relay Node method
-
-Cross-SF Communication: Enables message transfer between devices operating at different SFs.
-
-Dual-Radio Relay: Expands coverage and enables SF translation.
-
-Modular Testing: Each node can be tested independently.
-
-Enhanced Debugging: Clear logs for both RX and TX events.
-
-Flexible Extension: Relay node can be expanded for dynamic SF detection or routing in mesh networks.
+- Cross-SF Communication: Enables message transfer between devices operating at different SFs.
+- Dual-Radio Relay: Expands coverage and enables SF translation.
+- Modular Testing: Each node can be tested independently.
+- Enhanced Debugging: Clear logs for both RX and TX events.
+- Flexible Extension: Relay node can be expanded for dynamic SF detection or routing in mesh networks.
