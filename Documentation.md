@@ -50,10 +50,9 @@ This configuration acts as a **spreading factor conversion bridge**, enabling co
 - **RFM2** operates as the **transmitter** (SF8).  
 - Both modules share the same frequency band (868 MHz).  
 - Uses two separate `SPIClass` instances:
-  ```cpp
   SPIClass hspi(HSPI);
   SPIClass vspi(VSPI);
-``
+
   # Example Transmission Path:
 
 TX1 → Relay (RFM1:SF7) → RFM2(SF8) → Receiver
@@ -77,10 +76,10 @@ TX1 → Relay (RFM1:SF7) → RFM2(SF8) → Receiver
 
 # Receiver
 
--Single LoRa module
--Listens on SF8
--Uses optional CRC check (LoRa.enableCrc())
--Prints received packets to Serial
+- Single LoRa module
+- Listens on SF8
+- Uses optional CRC check (LoRa.enableCrc())
+- Prints received packets to Serial
 
 # Benefits of using Relay Node method
 
