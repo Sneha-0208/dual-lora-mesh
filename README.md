@@ -37,7 +37,7 @@ Upload the firmware to each node.
 
 Configure node IDs and hardware pins in the firmware as required.
 ## Usage
-
+Copy the TX, RX, and relay code located in the SF_conversion/ directory into main.cpp and configure the platformio.ini file accordingly.
 - Power up the first end node and verify its LoRa module is operational.
 
 - Power the second end node; the relay node will automatically forward packets between SF7 and SF8.
