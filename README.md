@@ -38,11 +38,11 @@ Upload the firmware to each node.
 Configure node IDs and hardware pins in the firmware as required.
 ## Usage
 
-Power up the first end node and verify its LoRa module is operational.
+- Power up the first end node and verify its LoRa module is operational.
 
-Power the second end node; the relay node will automatically forward packets between SF7 and SF8.
+- Power the second end node; the relay node will automatically forward packets between SF7 and SF8.
 
-Monitor serial output or on-board LEDs to check node connectivity and packet forwarding.
+- Monitor serial output or on-board LEDs to check node connectivity and packet forwarding.
 
 ## Project Structure
 
