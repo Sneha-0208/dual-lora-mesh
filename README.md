@@ -1,13 +1,18 @@
 # dual-lora-mesh
 
 ## Project Overview  
-The objective of this project is to design a bridge node equipped with two LoRa radios that enables bidirectional communication between two independent LoRa mesh networks operating with different spreading factors (SFs).
+This project implements communication between two LoRa end devices operating at different spreading factors (SF7 and SF8) using a bridge/relay node based on ESP32. The relay node is equipped with two LoRa chips, one configured for SF7 and the other for SF8, allowing it to receive messages on one SF, convert them, and forward them to the other SF.
+
+LoRa nodes using different spreading factors cannot directly communicate because a single LoRa module can only demodulate packets sent at its configured SF. The relay node overcomes this limitation, enabling interoperability between nodes with different SFs and serving as a foundational step toward multi-SF LoRa mesh networks.
 
 ## Key Features  
-- Mesh topology: nodes forward messages across the network, extending range beyond single hop.  
-- Low power: nodes are designed to run on minimal power and operate for extended durations.  
-- Modular firmware structure (see `src/` and `lib/` folders) to allow easy customization or integration with sensors.
+- SF Conversion & Bridging: Enables communication between nodes on different spreading factors through a dual-LoRa relay node.
 
+- Single Dual-LoRa Node Advantage: Forwarding data internally between two LoRa chips on the same microcontroller is faster than using two separate nodes connected via a serial link.
+
+- Foundation for LoRa Mesh: The relay logic can be extended to act as a bridge between two separate LoRa meshes, facilitating multi-hop and multi-SF communication.
+
+Scalable & Configurable: Node IDs, SFs, and routing parameters can be configured in firmware for different network setups.
 ## Tech Stack & Hardware  
 - Firmware written in C++ (using the PlatformIO build system via `platformio.ini`).  
 - Uses LoRa radio modules (e.g., SX127x series) for wireless communication.  
@@ -20,20 +25,24 @@ The objective of this project is to design a bridge node equipped with two LoRa 
    cd dual-lora-mesh
 Install PlatformIO and open the project in VS Code or your preferred IDE.
 
-Connect your microcontroller board and configure platformio.ini with the correct board type, upload port, and LoRa module settings (frequency, spreading factor, etc.).
+Connect your microcontroller board and configure platformio.ini with:
+
+- Board type
+
+- Upload port
+
+- LoRa module settings (frequency, spreading factor, pins, etc.)
 
 Upload the firmware to each node.
 
-Configure node IDs, mesh parameters, and gateway configuration as required.
+Configure node IDs and hardware pins in the firmware as required.
+## Usage
 
-Usage
-Power up your first node (gateway) and ensure its LoRa module is working.
+Power up the first end node and verify its LoRa module is operational.
 
-Add additional nodes; they will join the mesh and start forwarding messages.
+Power the second end node; the relay node will automatically forward packets between SF7 and SF8.
 
-Use serial output or on-board indicators (LEDs) to monitor node connectivity and routing paths.
-
-Test communication between nodes, verify packet routing, and adjust parameters (such as transmit power or mesh forwarding logic) for optimal performance.
+Monitor serial output or on-board LEDs to check node connectivity and packet forwarding.
 
 ## Project Structure
 
