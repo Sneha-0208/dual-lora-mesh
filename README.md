@@ -45,13 +45,16 @@ Copy the TX, RX, and relay code located in the SF_conversion/ directory into mai
 - Monitor serial output or on-board LEDs to check node connectivity and packet forwarding.
 
 ## Project Structure
-
+<pre>
 ├── .vscode/               # IDE / debug configuration  
 ├── lib/                   # External libraries or modules  
-├── src/                   # Contains main.cpp
-├── SF_conversion/         # Relay and End node logic 
+├── src/                   # Contains main.cpp  
+├── SF_conversion/         # Relay and End node logic  
 ├── platformio.ini         # Build configuration  
 ├── .gitignore             # Files to ignore in Git  
-└── README.md              # (this file)  
-└── Documentation.md       # Code-level-understanding 
+├── README.md              # (this file)  
+├── Documentation.md       # Code-level understanding
+</pre>
+
+
 Feel free to add additional folders (e.g., docs/, hardware/, tests/) as the project expands.
