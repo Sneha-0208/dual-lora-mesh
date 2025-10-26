@@ -5,7 +5,7 @@
 
 ## 1. Overview
 
-This project demonstrates a **dual LoRa mesh network** which implements **cross-spreading factor (SF) communication**. The code is located in the "SF Conversion" folder within the repository.
+This project implements cross-communication between two LoRa end nodes (Transmitter and Receiver) with different spreading factors via a relay node (esp32-based controller with two LoRa chips). The code is located in the "SF Conversion" folder within the repository.
 It consists of three nodes:
 
 1. **Transmitter (SF7)** — Sends periodic packets with incrementing message counters.  
@@ -52,10 +52,6 @@ This configuration acts as a **spreading factor conversion bridge**, enabling co
 - Uses two separate `SPIClass` instances:
   SPIClass hspi(HSPI);
   SPIClass vspi(VSPI);
-
-  # Example Transmission Path:
-
-TX1 → Relay (RFM1:SF7) → RFM2(SF8) → Receiver
 
 # Code-Level Differences
 
