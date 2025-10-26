@@ -5,12 +5,12 @@
 
 ## 1. Overview
 
-This project demonstrates a **dual LoRa mesh network** capable of **cross-spreading factor (SF) communication**.  
-It consists of three coordinated nodes:
+This project demonstrates a **dual LoRa mesh network** which implements **cross-spreading factor (SF) communication**. The code is located in the "SF Conversion" folder within the repository.
+It consists of three nodes:
 
 1. **Transmitter (SF7)** — Sends periodic packets with incrementing message counters.  
 2. **Relay Node (Dual LoRa)** — Receives packets at **SF7** via RFM1 and relays them at **SF8** via RFM2.  
-3. **Receiver (SF8)** — Receives relayed packets and displays them on Serial Monitor.
+3. **Receiver (SF8)** — Receives relayed packets and displays them on the Serial Monitor.
 
 This configuration acts as a **spreading factor conversion bridge**, enabling communication between LoRa nodes operating on different SF values.
 
@@ -66,7 +66,7 @@ Receives packets on SF7 (RFM1)
 
 Transmits modified packets on SF8 (RFM2)
 
-Uses printable character filter to ignore corrupted data
+Uses a printable character filter to ignore corrupted data
 
 Adds " from RFM2" before relaying
 
@@ -80,7 +80,7 @@ Uses optional CRC check (LoRa.enableCrc())
 
 Prints received packets to Serial
 
-9. Advantages of SF Conversion Design
+Benefits of using Relay Node method
 
 Cross-SF Communication: Enables message transfer between devices operating at different SFs.
 
@@ -91,5 +91,3 @@ Modular Testing: Each node can be tested independently.
 Enhanced Debugging: Clear logs for both RX and TX events.
 
 Flexible Extension: Relay node can be expanded for dynamic SF detection or routing in mesh networks.
-  SPIClass hspi(HSPI);
-  SPIClass vspi(VSPI);
